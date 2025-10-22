@@ -9,30 +9,31 @@ import wallpaper from '../assets/images/wallpaper.jpg';
 const desktopIcons = ref<DesktopIconType[]>([
   {
     id: '1',
-    name: 'Members',
-    icon: new URL('../assets/images/icons/Members.png', import.meta.url).href,
+    name: 'About Us',
+    icon: new URL('../assets/images/icons/AboutUs.png', import.meta.url).href,
     position: { x: 20, y: 20 },
-    action: () => openWindow('1', 'Members', new URL('../assets/images/icons/Members.png', import.meta.url).href),
+    action: () => openWindow('1', 'About us', new URL('../assets/images/icons/AboutUs.png', import.meta.url).href),
   },
   {
     id: '2',
-    name: 'Order',
-    icon: new URL('../assets/images/icons/Mail.png', import.meta.url).href,
+    name: 'Members',
+    icon: new URL('../assets/images/icons/Members.png', import.meta.url).href,
     position: { x: 20, y: 120 },
-    action: () => openWindow('2', 'Mail Us', new URL('../assets/images/icons/Mail.png', import.meta.url).href),
+    action: () => openWindow('2', 'Members', new URL('../assets/images/icons/Members.png', import.meta.url).href),
   },
   {
     id: '3',
-    name: 'Documentation',
-    icon: new URL('../assets/images/icons/Documentation.png', import.meta.url).href,
+    name: 'Order',
+    icon: new URL('../assets/images/icons/Mail.png', import.meta.url).href,
     position: { x: 20, y: 220 },
-    action: () => openWindow('3', 'Documentation', new URL('../assets/images/icons/Documentation.png', import.meta.url).href),
+    action: () => openWindow('3', 'Mail Us', new URL('../assets/images/icons/Mail.png', import.meta.url).href),
   },
   {
     id: '4',
     name: 'Bin',
     icon: new URL('../assets/images/icons/Bin.png', import.meta.url).href,
     position: { x: 20, y: 320 },
+    action: () => openWindow('4', 'Bin', new URL('../assets/images/icons/Bin.png', import.meta.url).href),
   },
 ]);
 

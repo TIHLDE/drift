@@ -16,10 +16,10 @@ const desktopIcons = ref<DesktopIconType[]>([
   },
   {
     id: '2',
-    name: 'Mail Us',
-    icon: new URL('../assets/images/icons/MailUs.png', import.meta.url).href,
+    name: 'Order',
+    icon: new URL('../assets/images/icons/Mail.png', import.meta.url).href,
     position: { x: 20, y: 120 },
-    action: () => openWindow('2', 'Mail Us', new URL('../assets/images/icons/MailUs.png', import.meta.url).href),
+    action: () => openWindow('2', 'Mail Us', new URL('../assets/images/icons/Mail.png', import.meta.url).href),
   },
   {
     id: '3',

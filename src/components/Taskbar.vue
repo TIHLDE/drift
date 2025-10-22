@@ -138,13 +138,13 @@ const handleWindowRightClick = (event: MouseEvent, windowId: string) => {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
+  padding: 4px 7px 2px 9px;
   min-width: 120px;
   max-width: 180px;
   height: 30px;
   background: #c0c0c0;
   border: 2px solid;
-  border-color: #ffffff #000000 #000000 #ffffff;
+  border-color: #000000 #ffffff #ffffff #000000;
   cursor: pointer;
   font-size: 12px;
   color: #000;
@@ -163,8 +163,8 @@ const handleWindowRightClick = (event: MouseEvent, windowId: string) => {
 }
 
 .taskbar-item.minimized {
-  border-color: #000000 #ffffff #ffffff #000000;
-  padding: 4px 7px 2px 9px;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  padding: 3px 8px;
 }
 
 .taskbar-item-icon {

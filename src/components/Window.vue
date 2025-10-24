@@ -195,7 +195,7 @@ const handleFocus = () => {
   gap: 4px;
   color: white;
   font-weight: bold;
-  font-size: 11px;
+  font-size: 15px;
   flex: 1;
   overflow: hidden;
 }

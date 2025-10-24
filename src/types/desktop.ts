@@ -14,7 +14,6 @@ export interface Position {
   y: number;
 }
 
-
 export interface Window {
   id: string;
   title: string;

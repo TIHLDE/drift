@@ -26,5 +26,7 @@ export interface Window {
   isMaximized: boolean;
   isMinimized: boolean;
   zIndex: number;
-  content?: string;
+  component?: string;
 }
+
+export type WindowType = 'about-us' | 'members' | 'order' | 'bin';

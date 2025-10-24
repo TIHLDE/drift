@@ -12,35 +12,35 @@ const desktopIcons = ref<DesktopIconType[]>([
     name: 'About Us',
     icon: new URL('../assets/images/icons/AboutUs.png', import.meta.url).href,
     position: { x: 20, y: 20 },
-    action: () => openWindow('1', 'About us', new URL('../assets/images/icons/AboutUs.png', import.meta.url).href),
+    action: () => openWindow('about-us', 'About us', new URL('../assets/images/icons/AboutUs.png', import.meta.url).href, 'about-us'),
   },
   {
     id: '2',
     name: 'Members',
     icon: new URL('../assets/images/icons/Members.png', import.meta.url).href,
     position: { x: 20, y: 120 },
-    action: () => openWindow('2', 'Members', new URL('../assets/images/icons/Members.png', import.meta.url).href),
+    action: () => openWindow('members', 'Members', new URL('../assets/images/icons/Members.png', import.meta.url).href, 'members'),
   },
   {
     id: '3',
     name: 'Order',
     icon: new URL('../assets/images/icons/Mail.png', import.meta.url).href,
     position: { x: 20, y: 220 },
-    action: () => openWindow('3', 'Order', new URL('../assets/images/icons/Mail.png', import.meta.url).href),
+    action: () => openWindow('order', 'Order', new URL('../assets/images/icons/Mail.png', import.meta.url).href, 'order'),
   },
   {
     id: '4',
     name: 'Bin',
     icon: new URL('../assets/images/icons/Bin.png', import.meta.url).href,
     position: { x: 20, y: 320 },
-    action: () => openWindow('4', 'Bin', new URL('../assets/images/icons/Bin.png', import.meta.url).href),
+    action: () => openWindow('bin', 'Recycle Bin', new URL('../assets/images/icons/Bin.png', import.meta.url).href, 'bin'),
   },
 ]);
 
 const windows = ref<WindowType[]>([]);
 const nextZIndex = ref(100);
 
-const openWindow = (id: string, title: string, icon: string) => {
+const openWindow = (id: string, title: string, icon: string, component?: string) => {
   const existingWindow = windows.value.find(w => w.id === id);
   if (existingWindow) {
     focusWindow(id);
@@ -60,6 +60,7 @@ const openWindow = (id: string, title: string, icon: string) => {
     isMaximized: false,
     isMinimized: false,
     zIndex: nextZIndex.value++,
+    component,
   };
   
   windows.value.push(newWindow);

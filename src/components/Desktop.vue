@@ -35,6 +35,13 @@ const desktopIcons = ref<DesktopIconType[]>([
     position: { x: 20, y: 320 },
     action: () => openWindow('bin', 'Recycle Bin', new URL('../assets/images/icons/Bin.png', import.meta.url).href, 'bin'),
   },
+  {
+    id: '5',
+    name: 'Kiosk Screen',
+    icon: new URL('../assets/images/icons/kiosk_screen.png', import.meta.url).href,
+    position: { x: 1220, y: 120 },
+    action: () => openWindow('kiosk screen', 'Kiosk Screen', new URL('../assets/images/icons/kiosk_screen.png', import.meta.url).href, 'kiosk screen'),
+  },
 ]);
 
 const windows = ref<WindowType[]>([]);

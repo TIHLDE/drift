@@ -20,12 +20,14 @@ const AboutUsWindow = defineAsyncComponent(() => import('./windows/AboutUsWindow
 const MembersWindow = defineAsyncComponent(() => import('./windows/MembersWindow.vue'));
 const OrderWindow = defineAsyncComponent(() => import('./windows/OrderWindow.vue'));
 const BinWindow = defineAsyncComponent(() => import('./windows/BinWindow.vue'));
+const KioskScreenWindow = defineAsyncComponent(() => import('./windows/KioskScreenWindow.vue'));
 
 const componentMap: Record<string, any> = {
   'about-us': AboutUsWindow,
   'members': MembersWindow,
   'order': OrderWindow,
   'bin': BinWindow,
+  'kiosk screen': KioskScreenWindow,
 };
 
 const windowComponent = computed(() => {

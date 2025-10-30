@@ -10,4 +10,8 @@
 </script>
 
 <style scoped>
+.kiosk-screen-window {
+  background-color: #ffffff;
+  padding: 10px;
+}
 </style>

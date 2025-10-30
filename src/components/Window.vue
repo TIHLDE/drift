@@ -52,7 +52,7 @@ const windowStyle = computed(() => {
       left: '0px',
       top: '0px',
       width: '100vw',
-      height: 'calc(100vh - 40px)',
+      height: '100vh',
       zIndex: props.window.zIndex,
     };
   }

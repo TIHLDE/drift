@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import DesktopIcon from './DesktopIcon.vue';
 import Taskbar from './Taskbar.vue';
 import Window from './Window.vue';
@@ -47,6 +47,10 @@ const desktopIcons = ref<DesktopIconType[]>([
 const windows = ref<WindowType[]>([]);
 const nextZIndex = ref(100);
 
+const hasMaximizedWindow = computed(() => {
+  return windows.value.some(w => w.isMaximized && !w.isMinimized);
+});
+
 const openWindow = (id: string, title: string, icon: string, component?: string) => {
   const existingWindow = windows.value.find(w => w.id === id);
   if (existingWindow) {
@@ -66,6 +70,11 @@ const openWindow = (id: string, title: string, icon: string, component?: string)
   if (id === 'members') {
     windowSize = { width: 1200, height: 750 };
   }
+  if (id === 'order') {
+    windowSize = { width: 600, height: 420}
+  }
+
+  const isMaximized = id === 'kiosk screen';
   
   const newWindow: WindowType = {
     id,
@@ -73,7 +82,7 @@ const openWindow = (id: string, title: string, icon: string, component?: string)
     icon,
     position: { x: 100 + offset, y: 80 + offset },
     size: windowSize,
-    isMaximized: false,
+    isMaximized: isMaximized,
     isMinimized: false,
     zIndex: nextZIndex.value++,
     component,
@@ -143,6 +152,7 @@ const maximizeWindow = (id: string) => {
     </div>
     
     <Taskbar 
+      v-if="!hasMaximizedWindow"
       :windows="windows"
       @close-window="closeWindow"
       @focus-window="focusWindow"

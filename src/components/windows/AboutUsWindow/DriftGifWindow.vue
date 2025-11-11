@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import driftGif from '../../assets/images/other/drift.gif';
+import driftGif from '../../../assets/images/other/drift.gif';
 </script>
 
 <template>

@@ -12,6 +12,8 @@ interface Emits {
   (e: 'focus', id: string): void;
   (e: 'minimize', id: string): void;
   (e: 'maximize', id: string): void;
+  (e: 'open-external-screen'): void;
+  (e: 'open-internal-screen'): void;
 }
 
 const props = defineProps<Props>();
@@ -21,7 +23,7 @@ const AboutUsWindow = defineAsyncComponent(() => import('./windows/AboutUsWindow
 const MembersWindow = defineAsyncComponent(() => import('./windows/MembersWindow.vue'));
 const OrderWindow = defineAsyncComponent(() => import('./windows/OrderWindow.vue'));
 const KioskScreenWindow = defineAsyncComponent(() => import('./windows/KioskScreenWindow.vue'));
-const DriftGifWindow = defineAsyncComponent(() => import('./windows/DriftGifWindow.vue'));
+const DriftGifWindow = defineAsyncComponent(() => import('./windows/AboutUsWindow/DriftGifWindow.vue'));
 
 const componentMap: Record<string, any> = {
   'about-us': AboutUsWindow,
@@ -141,6 +143,14 @@ const handleMaximize = () => {
 const handleFocus = () => {
   emit('focus', props.window.id);
 };
+
+const handleOpenExternalScreen = () => {
+  emit('open-external-screen');
+};
+
+const handleOpenInternalScreen = () => {
+  emit('open-internal-screen');
+};
 </script>
 
 <template>
@@ -176,6 +186,8 @@ const handleFocus = () => {
       v-if="windowComponent"
       :open-window="props.openWindow"
       class="window-content-component"
+      @open-external-screen="handleOpenExternalScreen"
+      @open-internal-screen="handleOpenInternalScreen"
     />
     <div v-else class="window-body">
       <div class="content-placeholder">

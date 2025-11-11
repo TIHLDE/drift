@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import DesktopIcon from './DesktopIcon.vue';
 import Taskbar from './Taskbar.vue';
 import Window from './Window.vue';
+import ExternalKioskScreen from './windows/KioskScreenWindow/ExternalKioskScreen.vue';
+import InternalKioskScreen from './windows/KioskScreenWindow/InternalKioskScreen.vue';
 import type { DesktopIcon as DesktopIconType, Window as WindowType } from '../types/desktop';
 import wallpaper from '../assets/images/wallpaper.jpg';
 
@@ -45,6 +47,8 @@ const desktopIcons = ref<DesktopIconType[]>([
 
 const windows = ref<WindowType[]>([]);
 const nextZIndex = ref(100);
+const showExternalKiosk = ref(false);
+const showInternalKiosk = ref(false);
 
 const hasMaximizedWindow = computed(() => {
   return windows.value.some(w => w.isMaximized && !w.isMinimized);
@@ -72,8 +76,6 @@ const openWindow = (id: string, title: string, icon: string, component?: string)
   if (id === 'order') {
     windowSize = { width: 600, height: 420}
   }
-
-  const isMaximized = id === 'kiosk screen';
   
   const newWindow: WindowType = {
     id,
@@ -81,7 +83,7 @@ const openWindow = (id: string, title: string, icon: string, component?: string)
     icon,
     position: { x: 100 + offset, y: 80 + offset },
     size: windowSize,
-    isMaximized: isMaximized,
+    isMaximized: false,
     isMinimized: false,
     zIndex: nextZIndex.value++,
     component,
@@ -127,11 +129,47 @@ const maximizeWindow = (id: string) => {
     window.isMaximized = !window.isMaximized;
   }
 };
+
+const openExternalKiosk = () => {
+  closeWindow('kiosk screen');
+  showExternalKiosk.value = true;
+  requestFullscreen();
+};
+
+const openInternalKiosk = () => {
+  closeWindow('kiosk screen');
+  showInternalKiosk.value = true;
+  requestFullscreen();
+};
+
+const closeExternalKiosk = () => {
+  showExternalKiosk.value = false;
+};
+
+const closeInternalKiosk = () => {
+  showInternalKiosk.value = false;
+};
+
+const requestFullscreen = () => {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  }
+};
 </script>
 
 <template>
   <div class="desktop">
-    <div class="desktop-background" :style="{ backgroundImage: `url(${wallpaper})` }">
+    <ExternalKioskScreen 
+      v-if="showExternalKiosk"
+      @close="closeExternalKiosk"
+    />
+    <InternalKioskScreen 
+      v-if="showInternalKiosk"
+      @close="closeInternalKiosk"
+    />
+    
+    <div v-if="!showExternalKiosk && !showInternalKiosk" class="desktop-background" :style="{ backgroundImage: `url(${wallpaper})` }">
       <DesktopIcon 
         v-for="icon in desktopIcons" 
         :key="icon.id" 
@@ -147,11 +185,13 @@ const maximizeWindow = (id: string) => {
         @focus="focusWindow"
         @minimize="minimizeWindow"
         @maximize="maximizeWindow"
+        @open-external-screen="openExternalKiosk"
+        @open-internal-screen="openInternalKiosk"
       />
     </div>
     
     <Taskbar 
-      v-if="!hasMaximizedWindow"
+      v-if="!hasMaximizedWindow && !showExternalKiosk && !showInternalKiosk"
       :windows="windows"
       @close-window="closeWindow"
       @focus-window="focusWindow"

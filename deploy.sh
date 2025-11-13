@@ -6,7 +6,7 @@ set -e
 # CONFIGURATION
 # Change these values as needed
 DOMAIN="drift.tihlde.org"
-PORT=2004
+PORT=2003
 ################################
 
 COMMIT_HASH=$(git rev-parse --short HEAD)

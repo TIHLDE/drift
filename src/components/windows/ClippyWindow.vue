@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import clippyImg from '../../assets/images/icons/clippy.webp';
-
+import clippyImg from "../../assets/images/icons/Clippy.webp";
 
 const messages = ref([
-  { from: "clippy", text: "It looks like you're trying to ask a question!" }
+  { from: "clippy", text: "It looks like you're trying to ask a question!" },
 ]);
 
 const userInput = ref("");
@@ -18,30 +17,31 @@ const sendMessage = async () => {
   userInput.value = "";
   isLoading.value = true;
 
-  const thinkingIndex = messages.value.push({
-    from: "clippy",
-    text: "Let me think..."
-  }) - 1;
+  const thinkingIndex =
+    messages.value.push({
+      from: "clippy",
+      text: "Let me think...",
+    }) - 1;
 
   try {
     const response = await fetch("http://129.241.100.98:8000/internal/query", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": "super-secret-token"
+        "x-api-key": "super-secret-token",
       },
-      body: JSON.stringify({ question: userText })
+      body: JSON.stringify({ question: userText }),
     });
 
     const data = await response.json();
     messages.value[thinkingIndex] = {
       from: "clippy",
-      text: data.answer || "I'm not sure how to respond!"
+      text: data.answer || "I'm not sure how to respond!",
     };
   } catch {
     messages.value[thinkingIndex] = {
       from: "clippy",
-      text: "Oops! Something went wrong connecting to TIHLDE's servers."
+      text: "Oops! Something went wrong connecting to TIHLDE's servers.",
     };
   } finally {
     isLoading.value = false;
@@ -52,7 +52,6 @@ const sendMessage = async () => {
 <template>
   <div class="window-body">
     <div class="clippy-wrapper">
-
       <!-- Left Column: Speech Bubble + Chat -->
       <div class="bubble-column">
         <div class="clippy-bubble">
@@ -64,24 +63,28 @@ const sendMessage = async () => {
 
         <!-- Chat history -->
         <div class="chat-area">
-          <div 
-            v-for="(msg, i) in messages.slice(0, -1)" 
+          <div
+            v-for="(msg, i) in messages.slice(0, -1)"
             :key="i"
             :class="['chat-msg', msg.from]"
           >
-            <b>{{ msg.from === 'clippy' ? 'Clippy:' : 'You:' }}</b>
+            <b>{{ msg.from === "clippy" ? "Clippy:" : "You:" }}</b>
             {{ msg.text }}
           </div>
         </div>
 
         <!-- Chat input -->
-        <form @submit.prevent="sendMessage" class="field-row" style="margin-top:10px;">
-          <input 
+        <form
+          @submit.prevent="sendMessage"
+          class="field-row"
+          style="margin-top: 10px"
+        >
+          <input
             type="text"
             v-model="userInput"
             placeholder="Ask Clippy..."
             class="chat-input"
-          >
+          />
           <button type="submit" :disabled="isLoading">Send</button>
         </form>
       </div>
@@ -90,7 +93,6 @@ const sendMessage = async () => {
       <div class="clippy-column">
         <img :src="clippyImg" alt="Clippy" class="clippy-image" />
       </div>
-
     </div>
   </div>
 </template>

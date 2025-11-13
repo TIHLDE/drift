@@ -24,7 +24,7 @@ const sendMessage = async () => {
     }) - 1;
 
   try {
-    const response = await fetch("http://129.241.100.98:8000/internal/query", {
+    const response = await fetch("https://clippy.tihlde.org/internal/query", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

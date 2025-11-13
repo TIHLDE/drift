@@ -1,51 +1,71 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import DesktopIcon from './DesktopIcon.vue';
 import Taskbar from './Taskbar.vue';
 import Window from './Window.vue';
+import ExternalKioskScreen from './windows/KioskScreenWindow/ExternalKioskScreen.vue';
+import InternalKioskScreen from './windows/KioskScreenWindow/InternalKioskScreen.vue';
 import type { DesktopIcon as DesktopIconType, Window as WindowType } from '../types/desktop';
 import wallpaper from '../assets/images/wallpaper.jpg';
 
 const desktopIcons = ref<DesktopIconType[]>([
   {
     id: '1',
-    name: 'About Us',
+    name: 'Om oss',
     icon: new URL('../assets/images/icons/AboutUs.png', import.meta.url).href,
     position: { x: 20, y: 20 },
-    action: () => openWindow('about-us', 'About us', new URL('../assets/images/icons/AboutUs.png', import.meta.url).href, 'about-us'),
+    action: () => openWindow('about-us', 'Om oss', new URL('../assets/images/icons/AboutUs.png', import.meta.url).href, 'about-us'),
   },
   {
     id: '2',
-    name: 'Members',
+    name: 'Medlemmer',
     icon: new URL('../assets/images/icons/Members.png', import.meta.url).href,
     position: { x: 20, y: 120 },
-    action: () => openWindow('members', 'Members', new URL('../assets/images/icons/Members.png', import.meta.url).href, 'members'),
+    action: () => openWindow('members', 'Medlemmer', new URL('../assets/images/icons/Members.png', import.meta.url).href, 'members'),
   },
   {
     id: '3',
-    name: 'Order',
+    name: 'Bestilling',
     icon: new URL('../assets/images/icons/Mail.png', import.meta.url).href,
     position: { x: 20, y: 220 },
-    action: () => openWindow('order', 'Order', new URL('../assets/images/icons/Mail.png', import.meta.url).href, 'order'),
+    action: () => openWindow('order', 'Bestilling', new URL('../assets/images/icons/Mail.png', import.meta.url).href, 'order'),
   },
   {
     id: '4',
-    name: 'Bin',
+    name: 'Papirkurv',
     icon: new URL('../assets/images/icons/Bin.png', import.meta.url).href,
     position: { x: 20, y: 320 },
-    action: () => openWindow('bin', 'Recycle Bin', new URL('../assets/images/icons/Bin.png', import.meta.url).href, 'bin'),
   },
   {
     id: '5',
-    name: 'Kiosk Screen',
+    name: 'Kioskskjerm',
     icon: new URL('../assets/images/icons/kiosk_screen.png', import.meta.url).href,
     position: { x: 1220, y: 120 },
-    action: () => openWindow('kiosk screen', 'Kiosk Screen', new URL('../assets/images/icons/kiosk_screen.png', import.meta.url).href, 'kiosk screen'),
+    action: () => openWindow('kiosk screen', 'Kioskskjerm', new URL('../assets/images/icons/kiosk_screen.png', import.meta.url).href, 'kiosk screen'),
+  },
+  {
+    id: '6',
+    name: 'Minecraft Server',
+    icon: new URL('../assets/images/icons/Minecraft_icon.svg', import.meta.url).href,
+    position: {x: 120, y: 20},
+    action: () => openWindow('minecraft server', 'Minecraft Server', new URL('../assets/images/icons/Minecraft_icon.svg', import.meta.url).href, 'minecraft server'),
+  },
+  {
+    id: '7',
+    name: 'Clippy AI',
+    icon: new URL('../assets/images/icons/Clippy.png', import.meta.url).href,
+    position: {x: 220, y: 120},
   },
 ]);
 
 const windows = ref<WindowType[]>([]);
 const nextZIndex = ref(100);
+const showExternalKiosk = ref(false);
+const showInternalKiosk = ref(false);
+
+const hasMaximizedWindow = computed(() => {
+  return windows.value.some(w => w.isMaximized && !w.isMinimized);
+});
 
 const openWindow = (id: string, title: string, icon: string, component?: string) => {
   const existingWindow = windows.value.find(w => w.id === id);
@@ -58,12 +78,27 @@ const openWindow = (id: string, title: string, icon: string, component?: string)
   }
 
   const offset = windows.value.length * 30;
+  
+  let windowSize = { width: 600, height: 400 };
+  if (id === 'about-us') {
+    windowSize = { width: 700, height: 500 };
+  } 
+  if (id === 'members') {
+    windowSize = { width: 1200, height: 750 };
+  }
+  if (id === 'order') {
+    windowSize = { width: 600, height: 420}
+  }
+  if (id === 'minecraft server') {
+    windowSize = { width: 650, height: 550 };
+  }
+  
   const newWindow: WindowType = {
     id,
     title,
     icon,
     position: { x: 100 + offset, y: 80 + offset },
-    size: { width: 600, height: 400 },
+    size: windowSize,
     isMaximized: false,
     isMinimized: false,
     zIndex: nextZIndex.value++,
@@ -110,11 +145,47 @@ const maximizeWindow = (id: string) => {
     window.isMaximized = !window.isMaximized;
   }
 };
+
+const openExternalKiosk = () => {
+  closeWindow('kiosk screen');
+  showExternalKiosk.value = true;
+  requestFullscreen();
+};
+
+const openInternalKiosk = () => {
+  closeWindow('kiosk screen');
+  showInternalKiosk.value = true;
+  requestFullscreen();
+};
+
+const closeExternalKiosk = () => {
+  showExternalKiosk.value = false;
+};
+
+const closeInternalKiosk = () => {
+  showInternalKiosk.value = false;
+};
+
+const requestFullscreen = () => {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  }
+};
 </script>
 
 <template>
   <div class="desktop">
-    <div class="desktop-background" :style="{ backgroundImage: `url(${wallpaper})` }">
+    <ExternalKioskScreen 
+      v-if="showExternalKiosk"
+      @close="closeExternalKiosk"
+    />
+    <InternalKioskScreen 
+      v-if="showInternalKiosk"
+      @close="closeInternalKiosk"
+    />
+    
+    <div v-if="!showExternalKiosk && !showInternalKiosk" class="desktop-background" :style="{ backgroundImage: `url(${wallpaper})` }">
       <DesktopIcon 
         v-for="icon in desktopIcons" 
         :key="icon.id" 
@@ -125,14 +196,18 @@ const maximizeWindow = (id: string) => {
         v-for="window in windows"
         :key="window.id"
         :window="window"
+        :open-window="openWindow"
         @close="closeWindow"
         @focus="focusWindow"
         @minimize="minimizeWindow"
         @maximize="maximizeWindow"
+        @open-external-screen="openExternalKiosk"
+        @open-internal-screen="openInternalKiosk"
       />
     </div>
     
     <Taskbar 
+      v-if="!hasMaximizedWindow && !showExternalKiosk && !showInternalKiosk"
       :windows="windows"
       @close-window="closeWindow"
       @focus-window="focusWindow"

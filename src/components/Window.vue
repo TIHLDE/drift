@@ -4,6 +4,7 @@ import type { Window } from '../types/desktop';
 
 interface Props {
   window: Window;
+  openWindow?: (id: string, title: string, icon: string, component?: string) => void;
 }
 
 interface Emits {
@@ -11,6 +12,8 @@ interface Emits {
   (e: 'focus', id: string): void;
   (e: 'minimize', id: string): void;
   (e: 'maximize', id: string): void;
+  (e: 'open-external-screen'): void;
+  (e: 'open-internal-screen'): void;
 }
 
 const props = defineProps<Props>();
@@ -19,15 +22,17 @@ const emit = defineEmits<Emits>();
 const AboutUsWindow = defineAsyncComponent(() => import('./windows/AboutUsWindow.vue'));
 const MembersWindow = defineAsyncComponent(() => import('./windows/MembersWindow.vue'));
 const OrderWindow = defineAsyncComponent(() => import('./windows/OrderWindow.vue'));
-const BinWindow = defineAsyncComponent(() => import('./windows/BinWindow.vue'));
 const KioskScreenWindow = defineAsyncComponent(() => import('./windows/KioskScreenWindow.vue'));
+const DriftGifWindow = defineAsyncComponent(() => import('./windows/AboutUsWindow/DriftGifWindow.vue'));
+const MinecraftWindow = defineAsyncComponent(() => import('./windows/MinecraftWindow.vue'));
 
 const componentMap: Record<string, any> = {
   'about-us': AboutUsWindow,
   'members': MembersWindow,
   'order': OrderWindow,
-  'bin': BinWindow,
   'kiosk screen': KioskScreenWindow,
+  'drift-gif': DriftGifWindow,
+  'minecraft server': MinecraftWindow,
 };
 
 const windowComponent = computed(() => {
@@ -49,7 +54,7 @@ const windowStyle = computed(() => {
       left: '0px',
       top: '0px',
       width: '100vw',
-      height: 'calc(100vh - 40px)',
+      height: '100vh',
       zIndex: props.window.zIndex,
     };
   }
@@ -140,6 +145,14 @@ const handleMaximize = () => {
 const handleFocus = () => {
   emit('focus', props.window.id);
 };
+
+const handleOpenExternalScreen = () => {
+  emit('open-external-screen');
+};
+
+const handleOpenInternalScreen = () => {
+  emit('open-internal-screen');
+};
 </script>
 
 <template>
@@ -173,13 +186,16 @@ const handleFocus = () => {
     <component 
       :is="windowComponent" 
       v-if="windowComponent"
+      :open-window="props.openWindow"
       class="window-content-component"
+      @open-external-screen="handleOpenExternalScreen"
+      @open-internal-screen="handleOpenInternalScreen"
     />
     <div v-else class="window-body">
       <div class="content-placeholder">
         <img :src="window.icon" alt="" class="content-icon" />
         <h2>{{ window.title }}</h2>
-        <p>Window content will be implemented here.</p>
+        <p>Vindusinnhold vil bli implementert her.</p>
       </div>
     </div>
     

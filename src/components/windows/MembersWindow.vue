@@ -23,7 +23,7 @@ const members = ref<Member[]>([
   { id: '11', name: 'Sander Bratvold', role: 'Monitorering', email: 'sander.bratvold@tihlde.org' },
   { id: '12', name: 'Sander Burud Sundbye', role: 'DevOps', email: '-' },
   { id: '13', name: 'Sebastian Ellefsen Burmo', role: 'CTF', email: '-' },
-  { id: '14', name: 'Sigve Eriksen', role: 'Nettside ansvarlig / Kiosksystem', email: 'sigveer@tihlde.org' },
+  { id: '14', name: 'Sigve Eriksen', role: 'Nettsideansvarlig / Kiosksystem', email: 'sigveer@tihlde.org' },
   { id: '15', name: 'Sindre Jentoft Bøe', role: 'CTF', email: '-' },
   { id: '16', name: 'Sofe Sirevåg Tysdal', role: 'DevOps', email: '-' },
   { id: '17', name: 'Sondre Søndergaard', role: 'Monitorering', email: '-' },

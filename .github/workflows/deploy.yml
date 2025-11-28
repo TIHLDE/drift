@@ -45,17 +45,10 @@ jobs:
           # If any command fails, the script will exit immediately with a non-zero status
           set -euo pipefail
 
-          # Run the deployment commands as root
-          sudo bash -c '
-
-            # Exit immediately if a command exits with a non-zero status
-            set -euo pipefail
-
-            # Navigate to the working directory, pull the latest code, and run the deployment script
-            cd "$WORKING_DIRECTORY"
-            git fetch
-            git reset --hard origin/main
-            ./deploy.sh
-          '
+          # Navigate to the working directory, pull the latest code, and run the deployment script
+          cd "$WORKING_DIRECTORY"
+          git fetch
+          git reset --hard origin/main
+          ./deploy.sh
 
           ENDSSH

@@ -9,15 +9,23 @@
     "build": "tsdown",
     "start": "node dist/index.mjs"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts"
+    }
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.26.2",
   "dependencies": {
     "@hono/node-server": "^1.19.9",
+    "@hono/zod-validator": "^0.7.6",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "hono": "^4.11.7",
     "ofetch": "^1.5.1",
+    "redis": "^5.10.0",
     "tsdown": "^0.20.1",
     "tsx": "^4.21.0",
     "zod": "^4.3.6"

@@ -98,7 +98,7 @@ onMounted(() => {
 
         <div class="info-section">
           <label>Versjon:</label>
-          <span>{{ serverVersion || '1.20.1' }} (Java Edition)</span>
+          <span>{{ serverVersion || '1.21.11' }} (Java Edition)</span>
         </div>
 
         <div v-if="motd" class="info-section">

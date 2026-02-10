@@ -7,6 +7,10 @@ RUN npm -g install pnpm
 
 # Kopier lock + manifest først for å cache install
 COPY package.json pnpm-lock.yaml* ./
+COPY pnpm-workspace.yaml* ./
+
+# Copy backend package.json for workspace
+COPY backend/package.json ./backend/
 
 RUN pnpm install --frozen-lockfile
 

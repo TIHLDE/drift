@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import "../style.css";
+
 import { ref, computed } from "vue";
 import DesktopIcon from "../components/DesktopIcon.vue";
 import Taskbar from "../components/Taskbar.vue";

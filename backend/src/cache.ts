@@ -15,12 +15,17 @@ export async function getCache() {
       await cache.ping();
 
       _cacheClient = new RedisCache(cache as RedisClientType);
+      console.log("[Cache] Connected to redis cache. Using redis client");
       return _cacheClient;
     } catch (e) {
       console.error("Failed to connect to redis", e);
       console.warn("Using in memory cache");
     }
   }
+
+  console.log(
+    "[Cache] Failed to connect to redis cache. Using in memory cache",
+  );
 
   const inMemory = new InMemory();
   _cacheClient = inMemory;

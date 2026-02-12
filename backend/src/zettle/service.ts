@@ -1,4 +1,6 @@
 import { ofetch } from "ofetch";
+import { PurchaseSchema } from "./schema";
+import z from "zod";
 
 type TokenInfo = {
   access_token: string;
@@ -23,11 +25,6 @@ export class ZettleAPI {
     }
 
     const url = new URL("/token", AUTH_BASE_URL);
-    console.log({
-      url: url.toString(),
-      clientId: this.clientId,
-      apiKey: this.apiKey,
-    });
 
     const token_response = await ofetch<{
       access_token: string;
@@ -82,5 +79,55 @@ export class ZettleAPI {
     });
 
     return response;
+  }
+
+  async getAllPurchasesInRange({
+    startDate,
+    endDate,
+  }: {
+    startDate: Date;
+    endDate: Date;
+  }) {
+    const allPurchases = [];
+
+    const responseSchema = z.object({ purchases: z.array(PurchaseSchema) });
+    const LIMIT = 1000;
+
+    const initialPurchases = responseSchema.parse(
+      await this.getPurchases({
+        startDate,
+        endDate,
+        limit: LIMIT,
+      }),
+    );
+
+    if (initialPurchases.purchases.length < LIMIT - 2) {
+      return initialPurchases.purchases;
+    }
+
+    allPurchases.push(...initialPurchases.purchases);
+
+    let offset = initialPurchases.purchases.at(-1)!.purchaseUUID1;
+
+    let lastResponse = initialPurchases;
+    while (lastResponse.purchases.length <= LIMIT - 2) {
+      const response = responseSchema.parse(
+        await this.getPurchases({
+          startDate,
+          endDate,
+          limit: LIMIT,
+          purchaseHash: offset,
+        }),
+      );
+      allPurchases.push(...response.purchases);
+
+      offset = response.purchases.at(-1)!.purchaseUUID1;
+      lastResponse = response;
+
+      console.log("Fetched", allPurchases.length, "purchases so far...");
+      console.log("Last purchase date:", allPurchases.at(-1)!.timestamp);
+    }
+
+    return allPurchases;
   }
 }

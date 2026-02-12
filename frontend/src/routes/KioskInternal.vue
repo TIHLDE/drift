@@ -1,111 +1,64 @@
-<template>
-  <div class="internal-kiosk-screen">
-    <div class="header">
-      <h1>Salgsstatistikk</h1>
-      <button @click="exitFullscreen" class="close-btn">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M18 6L6 18M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <div class="content">
-      <div v-if="loading" class="loading">
-        <div class="spinner"></div>
-        <p>Laster statistikk...</p>
-      </div>
-      <div v-else-if="error" class="error">
-        <p>{{ error }}</p>
-        <button @click="() => loadData(true)" class="retry-btn">
-          Prøv igjen
-        </button>
-      </div>
-      <div v-else class="stats-container">
-        <!-- Total products sold this year -->
-        <div class="total-section">
-          <div class="total-card">
-            <div class="card-label">Totalt solgt i år</div>
-            <div class="total-number">
-              {{ totalProductsThisYear.toLocaleString("nb-NO") }}
-            </div>
-            <div class="card-subtitle">produkter</div>
-          </div>
-        </div>
-
-        <!-- Products section -->
-        <div class="products-section">
-          <!-- This week -->
-          <div class="section-container">
-            <div class="section-header">
-              <span class="icon">📅</span>
-              <h3>Denne uken</h3>
-            </div>
-            <div class="products-grid">
-              <div v-if="weekProducts.length > 0">
-                <div
-                  v-for="product in weekProducts"
-                  :key="product.name"
-                  class="product-box"
-                >
-                  <div class="product-name">{{ product.name }}</div>
-                  <div class="product-amount">{{ product.amount }}</div>
-                </div>
-              </div>
-              <div v-else class="no-data">Ingen salg denne uken</div>
-            </div>
-          </div>
-
-          <!-- This year -->
-          <div class="section-container">
-            <div class="section-header">
-              <span class="icon">📈</span>
-              <h3>I år</h3>
-            </div>
-            <div class="products-grid">
-              <div v-if="yearProducts.length > 0">
-                <div
-                  v-for="product in yearProducts"
-                  :key="product.name"
-                  class="product-box"
-                >
-                  <div class="product-name">{{ product.name }}</div>
-                  <div class="product-amount">{{ product.amount }}</div>
-                </div>
-              </div>
-              <div v-else class="no-data">Ingen salg i år</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="last-updated">Sist oppdatert: {{ lastUpdated }}</div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { apiClient } from "@/api/client";
 import { useRouter } from "vue-router";
+import { useQuery } from "@tanstack/vue-query";
+import {
+  isAfter,
+  isEqual,
+  startOfDay,
+  startOfMinute,
+  subDays,
+  subYears,
+} from "date-fns";
 
-interface ProductStat {
-  name: string;
-  amount: number;
-}
-
-const loading = ref(true);
-const error = ref<string | null>(null);
-const totalProductsThisYear = ref(0);
-const weekProducts = ref<ProductStat[]>([]);
-const yearProducts = ref<ProductStat[]>([]);
-const lastUpdated = ref("");
 const router = useRouter();
+
+const now = ref(startOfMinute(new Date()));
+const lastYear = computed(() => startOfDay(subYears(now.value, 1)));
+const last7Days = computed(() => startOfDay(subDays(now.value, 7)));
+const last30Days = computed(() => startOfDay(subDays(now.value, 30)));
+
+const parseDate = (value?: string) => (value ? new Date(value) : null);
+
+const parseQuantity = (value?: string) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat("no-NO").format(Math.round(value));
+
+const getPurchaseItemCount = (purchase: any) => {
+  if (!Array.isArray(purchase?.products)) return 0;
+  return purchase.products.reduce((sum: number, product: any) => {
+    return sum + parseQuantity(product?.quantity);
+  }, 0);
+};
+
+const buildPopularItems = (purchaseList: any[], limit = 10) => {
+  const totals = new Map<string, number>();
+
+  purchaseList.forEach((purchase) => {
+    if (!Array.isArray(purchase?.products)) return;
+
+    purchase.products.forEach((product: any) => {
+      const baseName =
+        product?.name || product?.variantName || "Ukjent produkt";
+      const variant =
+        product?.variantName && product?.name ? `${product.variantName}` : null;
+      const label = variant ? `${baseName} (${variant})` : baseName;
+      const quantity = parseQuantity(product?.quantity);
+      if (quantity <= 0) return;
+      totals.set(label, (totals.get(label) || 0) + quantity);
+    });
+  });
+
+  return Array.from(totals.entries())
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, limit);
+};
 
 const exitFullscreen = () => {
   if (document.fullscreenElement) {
@@ -114,132 +67,205 @@ const exitFullscreen = () => {
   router.push("/");
 };
 
-const aggregateProducts = (purchases: any[]): ProductStat[] => {
-  const productMap = new Map<string, number>();
-
-  purchases.forEach((purchase) => {
-    if (purchase.products) {
-      purchase.products.forEach((product: any) => {
-        if (product.name) {
-          const quantity = parseFloat(product.quantity || "1");
-          const current = productMap.get(product.name) || 0;
-          productMap.set(product.name, current + quantity);
-        }
-      });
-    }
-  });
-
-  return Array.from(productMap.entries())
-    .map(([name, amount]) => ({ name, amount }))
-    .sort((a, b) => b.amount - a.amount);
-};
-
-const getTotalProducts = (purchases: any[]): number => {
-  let total = 0;
-  purchases.forEach((purchase) => {
-    if (purchase.products) {
-      purchase.products.forEach((product: any) => {
-        const quantity = parseFloat(product.quantity || "1");
-        total += quantity;
-      });
-    }
-  });
-  return total;
-};
-
-const loadData = async (showLoading: boolean = true) => {
-  loading.value = showLoading;
-  error.value = null;
-
-  try {
-    const now = new Date();
-
-    // Calculate date ranges - use UTC to avoid timezone issues
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const date = now.getDate();
-    const day = now.getDay();
-
-    // Start of year (YYYY-01-01)
-    const startOfYear = `${year}-01-01`;
-
-    // Start of week (Monday)
-    const mondayOffset = day === 0 ? -6 : 1 - day; // If Sunday (0), go back 6 days, else go to Monday
-    const monday = new Date(year, month, date + mondayOffset);
-    const startOfWeek = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
-
-    // Today (YYYY-MM-DD)
-    const today = `${year}-${String(month + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
-
-    console.log("🔍 Fetching data:", { startOfYear, startOfWeek, today });
-
-    // Fetch data for each period
-    const [yearResponse, weekResponse] = await Promise.all([
-      apiClient.api.zettle.purchases.$get({
+const {
+  data: purchases,
+  isPending,
+  isError,
+  error,
+  refetch,
+} = useQuery({
+  queryKey: ["zettle", "purchases", lastYear.value.toISOString(), now.value],
+  queryFn: () =>
+    apiClient.api.zettle.purchases
+      .$get({
         query: {
-          startDate: startOfYear,
-          endDate: today,
+          startDate: lastYear.value.toISOString(),
+          endDate: now.value.toISOString(),
         },
-      }),
-      apiClient.api.zettle.purchases.$get({
-        query: {
-          startDate: startOfWeek,
-          endDate: today,
-        },
-      }),
-    ]);
+      })
+      .then((res) => res.json()),
+});
 
-    if (!yearResponse.ok || !weekResponse.ok) {
-      throw new Error("Kunne ikke hente data fra API");
-    }
+const lastYearPurchases = computed(() => {
+  if (!purchases.value || !Array.isArray(purchases.value)) return [];
 
-    const yearData = await yearResponse.json();
-    const weekData = await weekResponse.json();
+  return purchases.value.filter((p) => {
+    const timestamp = parseDate(p.timestamp);
+    return timestamp ? isAfter(timestamp, lastYear.value) : false;
+  });
+});
 
-    console.log("📊 Data received:", {
-      yearPurchases: yearData.length,
-      weekPurchases: weekData.length,
-      yearData: yearData.slice(0, 2), // Log første 2 for debugging
-      weekData: weekData.slice(0, 2),
-    });
+const last7DaysPurchases = computed(() => {
+  if (!purchases.value || !Array.isArray(purchases.value)) return [];
 
-    // Process data
-    const yearProductsList = aggregateProducts(yearData);
-    const weekProductsList = aggregateProducts(weekData);
-    const totalProducts = getTotalProducts(yearData);
+  return purchases.value.filter((p) => {
+    const timestamp = parseDate(p.timestamp);
+    return timestamp ? isAfter(timestamp, last7Days.value) : false;
+  });
+});
 
-    console.log("✅ Processed:", {
-      yearProducts: yearProductsList.length,
-      weekProducts: weekProductsList.length,
-      totalProducts: totalProducts,
-      topYearProducts: yearProductsList.slice(0, 5),
-      topWeekProducts: weekProductsList.slice(0, 5),
-    });
+const last30DaysPurchases = computed(() => {
+  if (!purchases.value || !Array.isArray(purchases.value)) return [];
 
-    // Update reactive values
-    yearProducts.value = yearProductsList;
-    weekProducts.value = weekProductsList;
-    totalProductsThisYear.value = totalProducts;
+  return purchases.value.filter((p) => {
+    const timestamp = parseDate(p.timestamp);
+    return timestamp ? isAfter(timestamp, last30Days.value) : false;
+  });
+});
 
-    lastUpdated.value = new Date().toLocaleString("nb-NO");
-  } catch (e) {
-    console.error("❌ Error loading Zettle data:", e);
-    error.value =
-      "Kunne ikke laste statistikk. Sjekk at backend-serveren kjører.";
-  } finally {
-    loading.value = false;
-  }
-};
+const totalItemsLast7Days = computed(() =>
+  last7DaysPurchases.value.reduce(
+    (sum, purchase) => sum + getPurchaseItemCount(purchase),
+    0,
+  ),
+);
+
+const totalItemsLast30Days = computed(() =>
+  last30DaysPurchases.value.reduce(
+    (sum, purchase) => sum + getPurchaseItemCount(purchase),
+    0,
+  ),
+);
+
+const totalItemsLastYear = computed(() =>
+  lastYearPurchases.value.reduce(
+    (sum, purchase) => sum + getPurchaseItemCount(purchase),
+    0,
+  ),
+);
+
+const popularItemsLast7Days = computed(() =>
+  buildPopularItems(last7DaysPurchases.value),
+);
+
+const popularItemsLast30Days = computed(() =>
+  buildPopularItems(last30DaysPurchases.value),
+);
+
+const popularItemsLastYear = computed(() =>
+  buildPopularItems(lastYearPurchases.value),
+);
 
 onMounted(() => {
-  loadData();
-  // Auto-refresh every 5 minutes
-  const intervalId = setInterval(() => loadData(false), 1000 * 30);
+  const intervalId = setInterval(() => {
+    const newValue = startOfMinute(new Date());
+    if (isEqual(now.value, newValue)) return;
+    now.value = newValue;
+  }, 1000);
 
-  // Cleanup on unmount
   return () => clearInterval(intervalId);
 });
 </script>
+
+<template>
+  <div class="internal-kiosk-screen">
+    <button @click="exitFullscreen" class="close-btn">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+    <div class="content">
+      <div v-if="isPending" class="loading">
+        <div class="spinner"></div>
+        <p>Laster statistikk...</p>
+      </div>
+      <div v-else-if="isError && error" class="error">
+        <p>{{ error }}</p>
+        <button @click="() => refetch()" class="retry-btn">Prøv igjen</button>
+      </div>
+      <div v-else class="stats-container">
+        <div class="section-title">Totalt antall produkter solgt</div>
+
+        <div class="cards-grid">
+          <div class="stat-card">
+            <div class="card-label">Siste 7 dager</div>
+            <div class="card-value">
+              {{ formatNumber(totalItemsLast7Days) }}
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="card-label">Siste 30 dager</div>
+            <div class="card-value">
+              {{ formatNumber(totalItemsLast30Days) }}
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="card-label">Siste år</div>
+            <div class="card-value">{{ formatNumber(totalItemsLastYear) }}</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top: 60px">Populære varer</div>
+
+        <div class="popular-grid">
+          <div class="popular-card">
+            <div class="card-header">7 dager</div>
+            <div class="items-list">
+              <div
+                v-for="item in popularItemsLast7Days"
+                :key="`7d-full-${item.name}`"
+                class="item-row"
+              >
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-qty">{{ formatNumber(item.amount) }}</span>
+              </div>
+              <div v-if="!popularItemsLast7Days.length" class="empty-state">
+                Ingen data
+              </div>
+            </div>
+          </div>
+
+          <div class="popular-card">
+            <div class="card-header">30 dager</div>
+            <div class="items-list">
+              <div
+                v-for="item in popularItemsLast30Days"
+                :key="`30d-full-${item.name}`"
+                class="item-row"
+              >
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-qty">{{ formatNumber(item.amount) }}</span>
+              </div>
+              <div v-if="!popularItemsLast30Days.length" class="empty-state">
+                Ingen data
+              </div>
+            </div>
+          </div>
+
+          <div class="popular-card">
+            <div class="card-header">1 år</div>
+            <div class="items-list">
+              <div
+                v-for="item in popularItemsLastYear"
+                :key="`1y-full-${item.name}`"
+                class="item-row"
+              >
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-qty">{{ formatNumber(item.amount) }}</span>
+              </div>
+              <div v-if="!popularItemsLastYear.length" class="empty-state">
+                Ingen data
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="last-updated">
+          Oppdatert {{ now.toLocaleString("no-NO") }}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
@@ -253,7 +279,7 @@ onMounted(() => {
     sans-serif !important;
   width: 100vw;
   height: 100vh;
-  background: #0a0a0a;
+  background: linear-gradient(135deg, #0f1a2e 0%, #1a2a4e 100%);
   display: flex;
   flex-direction: column;
   overflow: auto;
@@ -271,46 +297,34 @@ onMounted(() => {
   cursor: default !important;
 }
 
-.header {
-  padding: 24px 48px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.header h1 {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: -0.02em;
-}
-
 .close-btn {
+  position: fixed;
+  top: 24px;
+  right: 24px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.8);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
   width: 40px;
   height: 40px;
-  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  padding: 0;
+  outline: none;
+  box-shadow: none;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
   color: #ffffff;
+  transform: rotate(90deg);
 }
 
 .content {
   flex: 1;
-  padding: 48px;
+  padding: 32px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -372,232 +386,256 @@ onMounted(() => {
 
 .stats-container {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1600px;
 }
 
-.total-section {
-  margin-bottom: 48px;
-  display: flex;
-  justify-content: center;
-}
-
-.total-card {
-  background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
-  padding: 48px 80px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.total-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(99, 102, 241, 0.5),
-    transparent
-  );
-}
-
-.card-label {
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 16px;
-  font-weight: 600;
-}
-
-.total-number {
-  font-size: 5rem;
+.section-title {
+  font-size: 1.75rem;
   font-weight: 700;
-  background: linear-gradient(
-    135deg,
-    #ffffff 0%,
-    rgba(255, 255, 255, 0.7) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 16px 0;
-  line-height: 1;
-}
-
-.card-subtitle {
-  font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-}
-
-.products-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-  gap: 32px;
-  margin-bottom: 32px;
-}
-
-.section-container {
-  background: rgba(26, 26, 26, 0.6);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.section-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(20, 20, 20, 0.5);
-}
-
-.section-header .icon {
-  font-size: 1.5rem;
-}
-
-.section-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
   color: #ffffff;
+  margin-bottom: 12px;
   letter-spacing: -0.01em;
 }
 
-.products-grid {
-  padding: 16px;
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.products-grid > div {
+.cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
 }
 
-.product-box {
-  background: rgba(40, 40, 40, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 16px;
+.stat-card {
+  background: linear-gradient(
+    135deg,
+    rgba(44, 100, 200, 0.15) 0%,
+    rgba(44, 100, 200, 0.05) 100%
+  );
+  border: 1px solid rgba(99, 150, 220, 0.3);
+  border-radius: 16px;
+  padding: 32px 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 20px;
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
-.product-box::before {
+.stat-card::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(99, 102, 241, 0.4),
+    rgba(99, 150, 220, 0.6),
     transparent
   );
-  opacity: 0;
-  transition: opacity 0.2s ease;
 }
 
-.product-box:hover {
-  background: rgba(50, 50, 50, 0.6);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+.stat-card:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(44, 100, 200, 0.25) 0%,
+    rgba(44, 100, 200, 0.1) 100%
+  );
+  border-color: rgba(99, 150, 220, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(44, 100, 200, 0.15);
 }
 
-.product-box:hover::before {
-  opacity: 1;
+.card-label {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+}
+
+.card-value {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.card-products {
+  border-top: 1px solid rgba(99, 150, 220, 0.2);
+  padding-top: 16px;
+}
+
+.products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.9rem;
 }
 
 .product-name {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.95rem;
-  font-weight: 500;
-  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.7);
   flex: 1;
 }
 
-.product-amount {
+.product-qty {
   color: #ffffff;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
+  margin-left: 12px;
+}
+
+.popular-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.popular-card {
   background: linear-gradient(
     135deg,
-    #ffffff 0%,
-    rgba(255, 255, 255, 0.7) 100%
+    rgba(44, 100, 200, 0.15) 0%,
+    rgba(44, 100, 200, 0.05) 100%
   );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  border: 1px solid rgba(99, 150, 220, 0.3);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.popular-card:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(44, 100, 200, 0.25) 0%,
+    rgba(44, 100, 200, 0.1) 100%
+  );
+  border-color: rgba(99, 150, 220, 0.5);
+  box-shadow: 0 12px 40px rgba(44, 100, 200, 0.15);
+}
+
+.card-header {
+  padding: 16px 24px;
+  background: rgba(44, 100, 200, 0.1);
+  border-bottom: 1px solid rgba(99, 150, 220, 0.3);
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.items-list {
+  padding: 16px 24px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(99, 150, 220, 0.15);
+  font-size: 0.95rem;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  color: rgba(255, 255, 255, 1);
+  flex: 1;
+}
+
+.item-qty {
+  color: #ffffff;
+  font-weight: 600;
+  margin-left: 12px;
+  min-width: 50px;
+  text-align: right;
+}
+
+.empty-state {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 32px 0;
 }
 
 .no-data {
   text-align: center;
   color: rgba(255, 255, 255, 0.4);
-  padding: 48px 24px;
+  padding: 24px;
   font-size: 0.95rem;
 }
 
 .last-updated {
   text-align: center;
   color: rgba(255, 255, 255, 0.4);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   padding: 24px;
   font-weight: 500;
 }
 
 @media (max-width: 1200px) {
-  .products-section {
+  .cards-grid,
+  .popular-grid {
     grid-template-columns: 1fr;
   }
 
-  .products-grid > div {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  .stat-card {
+    padding: 24px 20px;
   }
 
-  .total-card {
-    padding: 40px 60px;
-  }
-
-  .total-number {
-    font-size: 4rem;
+  .card-value {
+    font-size: 2.2rem;
   }
 }
 
 @media (max-width: 768px) {
-  .header {
-    padding: 20px 24px;
-  }
-
-  .header h1 {
-    font-size: 1.5rem;
-  }
-
   .content {
     padding: 24px;
   }
 
-  .total-card {
-    padding: 32px 40px;
+  .section-title {
+    font-size: 1.3rem;
+    margin-bottom: 16px;
   }
 
-  .total-number {
-    font-size: 3rem;
+  .cards-grid,
+  .popular-grid {
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card,
+  .popular-card {
+    padding: 20px 16px;
+  }
+
+  .card-value {
+    font-size: 2rem;
+  }
+
+  .card-header {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  .items-list {
+    padding: 12px 16px;
+  }
+
+  .item-row {
+    padding: 8px 0;
+    font-size: 0.85rem;
   }
 }
 </style>

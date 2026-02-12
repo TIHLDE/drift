@@ -11,6 +11,7 @@ COPY pnpm-workspace.yaml* ./
 
 # Copy backend package.json for workspace
 COPY backend/package.json ./backend/
+COPY frontend/package.json ./frontend/
 
 RUN pnpm install --frozen-lockfile
 
@@ -26,7 +27,7 @@ WORKDIR /app
 
 RUN npm -g install pnpm
 
-COPY --from=builder /app/dist/ ./dist
+COPY --from=builder /app/frontend/dist/ ./dist
 
 RUN npm -g install serve
 

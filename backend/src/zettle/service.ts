@@ -67,7 +67,7 @@ export class ZettleAPI {
     url.searchParams.append("endDate", endDate.toISOString());
     url.searchParams.append("limit", String(limit));
     if (purchaseHash) {
-      url.searchParams.append("purchaseHash", purchaseHash);
+      url.searchParams.append("lastPurchaseHash", purchaseHash);
     }
 
     const response = await ofetch(url, {
@@ -90,7 +90,10 @@ export class ZettleAPI {
   }) {
     const allPurchases = [];
 
-    const responseSchema = z.object({ purchases: z.array(PurchaseSchema) });
+    const responseSchema = z.object({
+      purchases: z.array(PurchaseSchema),
+      lastPurchaseHash: z.string().optional().nullable(),
+    });
     const LIMIT = 1000;
 
     const initialPurchases = responseSchema.parse(
@@ -101,16 +104,26 @@ export class ZettleAPI {
       }),
     );
 
+    console.log("Initial fetch", {
+      startDate,
+      endDate,
+      limit: LIMIT,
+      result: {
+        count: initialPurchases.purchases.length,
+        lastPurchaseHash: initialPurchases.lastPurchaseHash,
+      },
+    });
+
     if (initialPurchases.purchases.length < LIMIT - 2) {
       return initialPurchases.purchases;
     }
 
     allPurchases.push(...initialPurchases.purchases);
 
-    let offset = initialPurchases.purchases.at(-1)!.purchaseUUID1;
-
+    let offset = initialPurchases.lastPurchaseHash ?? undefined;
     let lastResponse = initialPurchases;
-    while (lastResponse.purchases.length <= LIMIT - 2) {
+
+    while (offset != null && lastResponse.purchases.length > 0) {
       const response = responseSchema.parse(
         await this.getPurchases({
           startDate,
@@ -119,13 +132,21 @@ export class ZettleAPI {
           purchaseHash: offset,
         }),
       );
+      console.log("Pagination fetch", {
+        startDate,
+        endDate,
+        limit: LIMIT,
+        offset: offset,
+        result: {
+          count: response.purchases.length,
+          lastPurchaseHash: response.lastPurchaseHash,
+        },
+      });
+
       allPurchases.push(...response.purchases);
 
-      offset = response.purchases.at(-1)!.purchaseUUID1;
+      offset = response.lastPurchaseHash ?? undefined;
       lastResponse = response;
-
-      console.log("Fetched", allPurchases.length, "purchases so far...");
-      console.log("Last purchase date:", allPurchases.at(-1)!.timestamp);
     }
 
     return allPurchases;

@@ -78,6 +78,8 @@ export class ZettleAPI {
       },
     });
 
+    console.log("Response",response);
+
     return response;
   }
 
@@ -90,7 +92,7 @@ export class ZettleAPI {
   }) {
     const allPurchases = [];
 
-    const responseSchema = z.object({ purchases: z.array(PurchaseSchema) });
+    const responseSchema = z.object({ purchases: z.array(PurchaseSchema), lastPurchaseHash: z.string().optional().nullable() });
     const LIMIT = 1000;
 
     const initialPurchases = responseSchema.parse(
@@ -101,16 +103,28 @@ export class ZettleAPI {
       }),
     );
 
+    console.log("Initial Purchases", initialPurchases.purchases.length, "and ", LIMIT - 2);
+
     if (initialPurchases.purchases.length < LIMIT - 2) {
       return initialPurchases.purchases;
     }
+
+    console.log("Do fucking more")
 
     allPurchases.push(...initialPurchases.purchases);
 
     let offset = initialPurchases.purchases.at(-1)!.purchaseUUID1;
 
     let lastResponse = initialPurchases;
-    while (lastResponse.purchases.length <= LIMIT - 2) {
+
+    console.log("Last mother fucker", lastResponse.purchases.length, LIMIT - 2);
+    while (lastResponse.purchases.length >= LIMIT - 2) {
+      console.log("fetch products", {
+        startDate,
+        endDate,
+        limit: LIMIT,
+        offset,
+      })
       const response = responseSchema.parse(
         await this.getPurchases({
           startDate,
@@ -119,9 +133,12 @@ export class ZettleAPI {
           purchaseHash: offset,
         }),
       );
+
+      console.log("received purchases", response.purchases.length);
       allPurchases.push(...response.purchases);
 
-      offset = response.purchases.at(-1)!.purchaseUUID1;
+      offset = response.lastPurchaseHash ?? undefined;
+      console.log("New offset", offset);
       lastResponse = response;
 
       console.log("Fetched", allPurchases.length, "purchases so far...");

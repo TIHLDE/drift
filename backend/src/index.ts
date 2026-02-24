@@ -6,6 +6,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 
 import { hc } from "hono/client";
+import { createNodeWebSocket } from "@hono/node-ws";
 
 const app = new Hono<{
   Variables: AppContext;
@@ -28,9 +29,15 @@ export type BackendApi = typeof app;
 
 export type ApiClientType = ReturnType<typeof hc<typeof app>>;
 
-serve({
+const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
+
+export { upgradeWebSocket };
+
+const server = serve({
   fetch: app.fetch,
   port: 3000,
 }).on("listening", () => {
   console.log("Server is listening on http://localhost:3000");
 });
+
+injectWebSocket(server);

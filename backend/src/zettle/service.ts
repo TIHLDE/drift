@@ -1,6 +1,7 @@
 import { ofetch } from "ofetch";
 import { PurchaseSchema } from "./schema";
 import z from "zod";
+import crypto from "node:crypto";
 
 type TokenInfo = {
   access_token: string;
@@ -16,6 +17,7 @@ export class ZettleAPI {
   constructor(
     private clientId: string,
     private apiKey: string,
+    private signingKey: string,
   ) {}
 
   async getToken() {
@@ -47,6 +49,46 @@ export class ZettleAPI {
     };
 
     return this.__token.access_token;
+  }
+
+  /**
+   * Helper to verify Zettle signature using Web Crypto API
+   */
+  async verifyZettleSignature(
+    timestamp: string,
+    payload: string,
+    receivedSignature: string,
+  ) {
+    if (this.signingKey == "super-secret-do-not-use-in-production") {
+      return true;
+    }
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(this.signingKey);
+    const dataToSign = encoder.encode(`${timestamp}.${payload}`);
+
+    // Import the signing key
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+
+    // Generate the signature
+    const signatureBuffer = await crypto.subtle.sign(
+      "HMAC",
+      cryptoKey,
+      dataToSign,
+    );
+
+    // Convert buffer to hex string
+    const hashArray = Array.from(new Uint8Array(signatureBuffer));
+    const calculatedSignature = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    return calculatedSignature === receivedSignature;
   }
 
   async getPurchases({

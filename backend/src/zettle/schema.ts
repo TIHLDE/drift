@@ -46,3 +46,14 @@ export const PurchaseSchema = z.object({
 });
 
 export type Purchase = z.infer<typeof PurchaseSchema>;
+
+export const WebhookSchema = z.object({
+  organizationUuid: z.string(),
+  messageUuid: z.string(),
+  eventName: z.string(),
+  messageId: z.string(),
+  payload: z.string(),
+  timestamp: z.string(),
+});
+
+export type WebhookBody = z.infer<typeof WebhookSchema>;

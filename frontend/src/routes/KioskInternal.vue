@@ -11,6 +11,10 @@ import {
   subDays,
   subYears,
 } from "date-fns";
+import {
+  useZettleWebSocket,
+  type Purchase,
+} from "@/composables/useZettleWebSocket";
 
 const router = useRouter();
 
@@ -76,10 +80,6 @@ const productsQuery = computed(() => {
   return queryOptions({
     queryKey: ["zettle", "purchases"],
     queryFn: () => {
-      console.log("I am now fetch bitch", {
-        lastYearISOString: lastYearISOString.value,
-        nowISOString: nowISOString.value,
-      });
       return apiClient.api.zettle.purchases
         .$get({
           query: {
@@ -99,6 +99,23 @@ const {
   error,
   refetch,
 } = useQuery(productsQuery);
+
+const showBanner = ref(false);
+const latestPurchase = ref<Purchase | null>(null);
+let bannerTimer: ReturnType<typeof setTimeout> | null = null;
+
+useZettleWebSocket(({ purchase }) => {
+  latestPurchase.value = purchase;
+  showBanner.value = true;
+  new Audio("/complete_sound.mp3").play().catch(() => {});
+  if (bannerTimer) clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => {
+    showBanner.value = false;
+  }, 6000);
+  setTimeout(() => {
+    queryClient.refetchQueries(productsQuery.value);
+  }, 200);
+});
 
 const lastYearPurchases = computed(() => {
   if (!purchases.value || !Array.isArray(purchases.value)) return [];
@@ -176,6 +193,45 @@ onMounted(() => {
 
 <template>
   <div class="internal-kiosk-screen">
+    <Transition name="banner">
+      <div
+        v-if="showBanner && latestPurchase"
+        class="purchase-banner"
+        @click="showBanner = false"
+      >
+        <div class="banner-card">
+          <div class="banner-heading">Nytt kjøp!</div>
+          <ul class="banner-products">
+            <li
+              v-for="(product, i) in latestPurchase.products"
+              :key="i"
+              class="banner-product-row"
+            >
+              <span class="banner-product-name">
+                {{ product.name || product.variantName || "Ukjent produkt" }}
+                <span
+                  v-if="product.variantName && product.name"
+                  class="banner-variant"
+                  >({{ product.variantName }})</span
+                >
+              </span>
+              <span class="banner-product-qty"
+                >x {{ product.quantity ?? 1 }}</span
+              >
+            </li>
+          </ul>
+          <div v-if="latestPurchase.amount != null" class="banner-total">
+            Totalt:
+            {{
+              new Intl.NumberFormat("no-NO", {
+                style: "currency",
+                currency: latestPurchase.currency || "NOK",
+              }).format(latestPurchase.amount / 100)
+            }}
+          </div>
+        </div>
+      </div>
+    </Transition>
     <button @click="exitFullscreen" class="close-btn">
       <svg
         width="20"
@@ -653,6 +709,119 @@ onMounted(() => {
   .item-row {
     padding: 8px 0;
     font-size: 0.85rem;
+  }
+}
+
+/* Purchase banner */
+.purchase-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.banner-card {
+  background: linear-gradient(135deg, #0d3d1a 0%, #1a5c2a 100%);
+  border: 2px solid #4ade80;
+  border-radius: 24px;
+  padding: 48px 64px;
+  min-width: 420px;
+  max-width: 640px;
+  text-align: center;
+  box-shadow:
+    0 0 60px rgba(74, 222, 128, 0.35),
+    0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+.banner-heading {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin-bottom: 28px;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
+}
+
+.banner-products {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.banner-product-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.2);
+  font-size: 1.1rem;
+}
+
+.banner-product-row:last-child {
+  border-bottom: none;
+}
+
+.banner-product-name {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.banner-variant {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+  font-size: 0.95em;
+}
+
+.banner-product-qty {
+  color: #4ade80;
+  font-weight: 700;
+  margin-left: 16px;
+}
+
+.banner-total {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  padding-top: 16px;
+  border-top: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+/* Vue Transition */
+.banner-enter-active {
+  animation: banner-in 0.35s ease;
+}
+
+.banner-leave-active {
+  animation: banner-out 0.25s ease;
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes banner-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.92) translateY(-16px);
   }
 }
 </style>

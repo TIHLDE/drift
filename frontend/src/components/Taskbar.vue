@@ -104,6 +104,7 @@ const handleWindowRightClick = (event: MouseEvent, windowId: string) => {
   margin: 0 3px;
   box-shadow: none;
   transition: none;
+  user-select: none;
 }
 
 .start-button:hover {

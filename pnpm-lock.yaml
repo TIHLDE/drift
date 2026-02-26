@@ -19,13 +19,13 @@ importers:
         version: 2.1.1
       '@hono/node-server':
         specifier: ^1.19.9
-        version: 1.19.9(hono@4.11.7)
+        version: 1.19.9(hono@4.11.10)
       '@hono/node-ws':
         specifier: ^1.3.0
-        version: 1.3.0(@hono/node-server@1.19.9(hono@4.11.7))(hono@4.11.7)
+        version: 1.3.0(@hono/node-server@1.19.9(hono@4.11.10))(hono@4.11.10)
       '@hono/zod-validator':
         specifier: ^0.7.6
-        version: 0.7.6(hono@4.11.7)(zod@4.3.6)
+        version: 0.7.6(hono@4.11.10)(zod@4.3.6)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -33,8 +33,8 @@ importers:
         specifier: ^17.2.3
         version: 17.2.3
       hono:
-        specifier: ^4.11.7
-        version: 4.11.7
+        specifier: ^4.11.10
+        version: 4.11.10
       ofetch:
         specifier: ^1.5.1
         version: 1.5.1
@@ -73,8 +73,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       hono:
-        specifier: ^4.11.7
-        version: 4.11.7
+        specifier: ^4.11.10
+        version: 4.11.10
       vue:
         specifier: ^3.5.22
         version: 3.5.24(typescript@5.9.3)
@@ -815,8 +815,8 @@ packages:
   get-tsconfig@4.13.1:
     resolution: {integrity: sha512-EoY1N2xCn44xU6750Sx7OjOIT59FkmstNc3X6y5xpz7D5cBtZRe/3pSlTkDJgqsOk3WwZPkWfonhhUJfttQo3w==}
 
-  hono@4.11.7:
-    resolution: {integrity: sha512-l7qMiNee7t82bH3SeyUCt9UF15EVmaBvsppY2zQtrbIhl/yzBTny+YUxsVjSjQ6gaqaeVtZmGocom8TzBlA4Yw==}
+  hono@4.11.10:
+    resolution: {integrity: sha512-kyWP5PAiMooEvGrA9jcD3IXF7ATu8+o7B3KCbPXid5se52NPqnOpM/r9qeW2heMnOekF4kqR1fXJqCYeCLKrZg==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -1411,22 +1411,22 @@ snapshots:
   '@esbuild/win32-x64@0.27.2':
     optional: true
 
-  '@hono/node-server@1.19.9(hono@4.11.7)':
+  '@hono/node-server@1.19.9(hono@4.11.10)':
     dependencies:
-      hono: 4.11.7
+      hono: 4.11.10
 
-  '@hono/node-ws@1.3.0(@hono/node-server@1.19.9(hono@4.11.7))(hono@4.11.7)':
+  '@hono/node-ws@1.3.0(@hono/node-server@1.19.9(hono@4.11.10))(hono@4.11.10)':
     dependencies:
-      '@hono/node-server': 1.19.9(hono@4.11.7)
-      hono: 4.11.7
+      '@hono/node-server': 1.19.9(hono@4.11.10)
+      hono: 4.11.10
       ws: 8.19.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@hono/zod-validator@0.7.6(hono@4.11.7)(zod@4.3.6)':
+  '@hono/zod-validator@0.7.6(hono@4.11.10)(zod@4.3.6)':
     dependencies:
-      hono: 4.11.7
+      hono: 4.11.10
       zod: 4.3.6
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -1830,7 +1830,7 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
-  hono@4.11.7: {}
+  hono@4.11.10: {}
 
   hookable@5.5.3: {}
 

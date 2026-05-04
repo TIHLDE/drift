@@ -24,7 +24,7 @@ jobs:
     needs: build-backend
     if: github.event_name != 'pull_request'
     uses: TIHLDE/tihlde-workflows/.github/workflows/_notify_deploy.yml@main
-      inputs:
-        image_name: "drift-backend"
+    inputs:
+      image_name: "drift-backend"
     secrets:
       DEPLOY_RECEIVER_TOKEN: ${{ secrets.DEPLOY_RECEIVER_TOKEN }}

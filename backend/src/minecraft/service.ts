@@ -1,5 +1,6 @@
 import { ofetch } from "ofetch";
 import z from "zod";
+import { logger } from "@/logger";
 
 const MinecraftServerStatusSchema = z.object({
   online: z.boolean(),
@@ -50,7 +51,14 @@ export class MinecraftAPI {
       const parsedData = MinecraftServerStatusSchema.parse(response);
       return parsedData;
     } catch (error) {
-      console.error("Error fetching Minecraft server status:", error);
+      logger.error(
+        {
+          err: error,
+          serverAddress: this.serverAddress,
+          event: "minecraft.status_fetch_failed",
+        },
+        "Error fetching Minecraft server status, returning offline status",
+      );
       // Return offline status if API fails
       return {
         online: false,

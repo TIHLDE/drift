@@ -2,6 +2,7 @@ import { ofetch } from "ofetch";
 import { PurchaseSchema } from "./schema";
 import z from "zod";
 import crypto from "node:crypto";
+import { logger } from "@/logger";
 
 type TokenInfo = {
   access_token: string;
@@ -146,15 +147,18 @@ export class ZettleAPI {
       }),
     );
 
-    console.log("Initial fetch", {
-      startDate,
-      endDate,
-      limit: LIMIT,
-      result: {
-        count: initialPurchases.purchases.length,
+    logger.debug(
+      {
+        event: "zettle.purchases.fetched",
+        scope: "initial",
+        startDate,
+        endDate,
+        limit: LIMIT,
+        resultCount: initialPurchases.purchases.length,
         lastPurchaseHash: initialPurchases.lastPurchaseHash,
       },
-    });
+      "Fetched initial purchases from Zettle",
+    );
 
     if (initialPurchases.purchases.length < LIMIT - 2) {
       return initialPurchases.purchases;
@@ -174,16 +178,19 @@ export class ZettleAPI {
           purchaseHash: offset,
         }),
       );
-      console.log("Pagination fetch", {
-        startDate,
-        endDate,
-        limit: LIMIT,
-        offset: offset,
-        result: {
-          count: response.purchases.length,
+      logger.debug(
+        {
+          event: "zettle.purchases.fetched",
+          scope: "page",
+          startDate,
+          endDate,
+          limit: LIMIT,
+          offset: offset,
+          resultCount: response.purchases.length,
           lastPurchaseHash: response.lastPurchaseHash,
         },
-      });
+        "Fetched purchase page from Zettle",
+      );
 
       allPurchases.push(...response.purchases);
 

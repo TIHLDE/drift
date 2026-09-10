@@ -1,6 +1,7 @@
 import type z from "zod";
 import type { PurchaseSchema } from "./zettle/schema";
 import type { WSContext } from "hono/ws";
+import { logger } from "./logger";
 
 export enum WebSocketEvents {
   ConnectionOpen = "connection_open",
@@ -57,7 +58,10 @@ export const ConnectionManager = {
       try {
         ws.send(message);
       } catch {
-        console.log("Failed to send message to client");
+        logger.warn(
+          { event: "websocket.send_failed" },
+          "Failed to send message to client",
+        );
       }
     }
   },
@@ -75,7 +79,10 @@ export const ConnectionManager = {
       });
       ws.send(message);
     } else {
-      console.warn(`No WebSocket connection found for id ${id}`);
+      logger.warn(
+        { id, event: "websocket.connection_not_found" },
+        `No WebSocket connection found for id ${id}`,
+      );
     }
   },
 };

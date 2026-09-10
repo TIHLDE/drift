@@ -8,6 +8,13 @@ import { cors } from "hono/cors";
 
 import { hc } from "hono/client";
 import { createNodeWebSocket } from "@hono/node-ws";
+import {
+  installErrorInterceptors,
+  pinoLoggerMiddleware,
+  logger,
+} from "@/logger";
+
+installErrorInterceptors();
 
 const app = new Hono<{
   Variables: AppContext;
@@ -22,6 +29,15 @@ const app = new Hono<{
   .use("*", async (c, next) => {
     c.set("cache", await getCache());
     await next();
+  })
+  .use("*", pinoLoggerMiddleware)
+  .onError((err, c) => {
+    const requestLogger = c.get("logger") ?? logger;
+    requestLogger.error(
+      { err, event: "http.error" },
+      "Unhandled error while handling request",
+    );
+    return c.text("Internal Server Error", { status: 500 });
   })
   .basePath("/api")
   .route("/", zettleApp)
@@ -39,7 +55,10 @@ const server = serve({
   fetch: app.fetch,
   port: 3000,
 }).on("listening", () => {
-  console.log("Server is listening on http://localhost:3000");
+  logger.info(
+    { event: "server.listening", url: "http://localhost:3000", port: 3000 },
+    "Server is listening",
+  );
 });
 
 injectWebSocket(server);

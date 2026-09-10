@@ -1,6 +1,7 @@
 import { createClient, type RedisClientType } from "redis";
 import z from "zod";
 import { env } from "@/env";
+import { logger } from "./logger";
 
 let _cacheClient: CacheClient | null = null;
 
@@ -15,16 +16,29 @@ export async function getCache() {
       await cache.ping();
 
       _cacheClient = new RedisCache(cache as RedisClientType);
-      console.log("[Cache] Connected to redis cache. Using redis client");
+      logger.info(
+        { event: "cache.connected", backend: "redis" },
+        "Connected to redis cache",
+      );
       return _cacheClient;
     } catch (e) {
-      console.error("Failed to connect to redis", e);
-      console.warn("Using in memory cache");
+      logger.error(
+        { err: e, event: "cache.connect_failed", backend: "redis" },
+        "Failed to connect to redis",
+      );
+      logger.warn(
+        { event: "cache.fallback_in_memory" },
+        "Falling back to in-memory cache",
+      );
     }
   }
 
-  console.log(
-    "[Cache] Failed to connect to redis cache. Using in memory cache",
+  logger.info(
+    {
+      event: "cache.fallback_in_memory",
+      reason: env.REDIS_URL ? "redis-unavailable" : "no-redis-url-configured",
+    },
+    "Using in-memory cache",
   );
 
   const inMemory = new InMemory();
@@ -74,7 +88,11 @@ abstract class BaseCache implements CacheClient {
     if (value == null) return undefined;
     try {
       return JSON.parse(value);
-    } catch {
+    } catch (error) {
+      logger.debug(
+        { err: error, event: "cache.parse_failed" },
+        "Failed to parse cached value as JSON",
+      );
       return undefined;
     }
   }
@@ -100,7 +118,10 @@ abstract class BaseCache implements CacheClient {
       cachedValue = await this.getObject<unknown>(key);
       cacheInfo.ttl = await this.getTTL(key);
     } catch (error) {
-      console.error(`Failed to retrieve from cache for key: ${key}`, error);
+      logger.error(
+        { err: error, key, event: "cache.get_failed" },
+        "Failed to retrieve from cache",
+      );
       cachedValue = undefined;
     }
     if (cachedValue != null) {
@@ -126,7 +147,10 @@ abstract class BaseCache implements CacheClient {
     try {
       await this.setObject(key, result.data, ttl);
     } catch (error) {
-      console.error(`Failed to cache value for key: ${key}`, error);
+      logger.error(
+        { err: error, key, event: "cache.set_failed" },
+        "Failed to cache value",
+      );
     }
     return { data: result.data, info: cacheInfo };
   }

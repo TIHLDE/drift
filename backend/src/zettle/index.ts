@@ -17,6 +17,7 @@ import { zValidator } from "@hono/zod-validator";
 import { upgradeWebSocket } from "../index";
 import { ConnectionManager, WebSocketEvents } from "@/websocket";
 import type { CacheClient } from "@/cache";
+import type { LoggerType } from "@/logger";
 
 export function getZettleApi() {
   if (
@@ -140,19 +141,30 @@ const zettleApp = createRoute()
   .post("/webhook", zValidator("json", WebhookSchema), async (c) => {
     const zettleApi = getZettleApi();
     const cache = c.get("cache");
+    const requestLogger: LoggerType = c.get("logger");
 
     let body: WebhookBody;
 
     try {
       body = await c.req.valid("json");
       const signature = c.req.header("X-Zettle-Signature");
-      zettleApi.verifyZettleSignature(
+      const valid = await zettleApi.verifyZettleSignature(
         body.timestamp,
         body.payload,
         signature ?? "",
       );
-    } catch {
+      if (!valid) {
+        requestLogger.warn(
+          { event: "zettle.webhook.invalid_signature" },
+          "Webhook signature verification failed",
+        );
+      }
+    } catch (e) {
       // Its not important if this succeeds or not
+      requestLogger.warn(
+        { err: e, event: "zettle.webhook.verification_failed" },
+        "Webhook verification failed, ignoring webhook",
+      );
       return c.text("OK", { status: 200 });
     }
 
@@ -180,14 +192,28 @@ const zettleApp = createRoute()
           purchase,
         });
 
-        console.log("Broadcasted new purchase to all clients", {
-          clientIds: Array.from(ConnectionManager.connections.keys()),
-        });
+        requestLogger.info(
+          {
+            event: "zettle.purchase.broadcasted",
+            clientIds: Array.from(ConnectionManager.connections.keys()),
+          },
+          "Broadcasted new purchase to all clients",
+        );
       }
 
       broadcastPurchase(body.payload, zettleApi, cache)
-        .then(() => console.log("Purchase event handled"))
-        .catch(console.error);
+        .then(() =>
+          requestLogger.info(
+            { event: "zettle.purchase.handled" },
+            "Purchase event handled",
+          ),
+        )
+        .catch((err) =>
+          requestLogger.error(
+            { err, event: "zettle.purchase.handler_failed" },
+            "Failed to handle purchase event",
+          ),
+        );
     }
 
     return c.text("OK", { status: 200 });

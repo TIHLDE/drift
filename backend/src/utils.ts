@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { CacheClient } from "./cache";
+import type { LoggerType } from "./logger";
 import { UTCDate } from "@date-fns/utc";
 import {
   addDays,
@@ -12,6 +13,7 @@ import {
 
 export type AppContext = {
   cache: CacheClient;
+  logger: LoggerType;
 };
 
 export function createRoute() {

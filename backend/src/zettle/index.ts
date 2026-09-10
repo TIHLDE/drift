@@ -147,7 +147,8 @@ const zettleApp = createRoute()
 
     try {
       body = await c.req.valid("json");
-      const signature = c.req.header("X-Zettle-Signature");
+      const signature =
+        c.req.header("X-iZettle-Signature") ?? c.req.header("X-Zettle-Signature");
       const valid = await zettleApi.verifyZettleSignature(
         body.timestamp,
         body.payload,

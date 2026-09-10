@@ -10,7 +10,10 @@ import {
   type Logger,
 } from "pino";
 
-export function serializeError(value: unknown) {
+// Explicit return type: TS2742 under pnpm's isolated node_modules layout.
+export function serializeError(
+  value: unknown,
+): { type: string; message: string } | ReturnType<typeof stdSerializers.err> {
   if (!(value instanceof Error)) {
     return { type: "NonError", message: format(value) };
   }

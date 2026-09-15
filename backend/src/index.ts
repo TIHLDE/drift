@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
 import zettleApp from "./zettle";
 import minecraftApp from "./minecraft";
+import photonApp from "./photon";
 import { getCache } from "./cache";
 import { type AppContext } from "./utils";
 import { Hono } from "hono";
@@ -41,7 +42,8 @@ const app = new Hono<{
   })
   .basePath("/api")
   .route("/", zettleApp)
-  .route("/", minecraftApp);
+  .route("/", minecraftApp)
+  .route("/", photonApp);
 
 export type BackendApi = typeof app;
 

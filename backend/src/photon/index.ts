@@ -30,8 +30,48 @@ const EventDetailSchema = z.object({
   registrationStart: z.string().nullable(),
 });
 
+const NewsItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  header: z.string(),
+  imageUrl: z.string().nullable(),
+  imageAlt: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+const NewsListSchema = z.object({
+  items: z.array(NewsItemSchema),
+});
+
+const NEWS_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
 const photonApp = createRoute()
   .basePath("/photon")
+  .get("/news", async (c) => {
+    const cache = c.get("cache");
+
+    // Cache for 30 min: all kiosk screens share one photon call per TTL
+    const cached = await cache.cachifyValidate({
+      key: `photon:news:recent`,
+      ttlSeconds: 30 * 60,
+      fn: async () => {
+        const cutoff = new Date(Date.now() - NEWS_MAX_AGE_MS);
+        const list = await ofetch(`${PHOTON_ENDPOINT}/api/news`, {
+          query: { pageSize: 50 },
+          parseResponse: JSON.parse,
+        }).then((res) => NewsListSchema.parse(res));
+
+        return {
+          items: list.items.filter(
+            (item) => new Date(item.createdAt) >= cutoff,
+          ),
+        };
+      },
+      schema: NewsListSchema,
+    });
+
+    return c.json(cached.data);
+  })
   .get("/event", async (c) => {
     const cache = c.get("cache");
 

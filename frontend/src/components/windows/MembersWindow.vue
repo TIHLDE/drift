@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import membersData from '@/data/members.json';
 
 interface Member {
   id: string;
@@ -9,18 +10,7 @@ interface Member {
   image?: string;
 }
 
-const members = ref<Member[]>([
-  { id: '1', name: 'Stian Closs Walmann', role: 'Leder / Driftsminister', email: ' driftsminister@tihlde.org' },
-  { id: '2', name: 'Borgar Barland', role: 'Nestleder', email: 'borgar@tihlde.org' },
-  { id: '3', name: 'Alexander Owren Elton', role: 'Clippy', email: '-' },
-  { id: '4', name: 'Kristian Ask Selmer', role: 'CTF', email: '-' },
-  { id: '5', name: 'Martin Godø', role: 'Monitorering', email: '-' },
-  { id: '6', name: 'Sander Bratvold', role: 'Botsjef / Monitorering', email: 'sander.bratvold@tihlde.org' },
-  { id: '7', name: 'Sebastian Ellefsen Burmo', role: 'CTF', email: '-' },
-  { id: '8', name: 'Sigve Eriksen', role: 'Nettsideansvarlig / Kiosksystem', email: 'sigveer@tihlde.org' },
-  { id: '9', name: 'Sindre Jentoft Bøe', role: 'CTF', email: '-' },
-  { id: '10', name: 'Sofie Sirevåg Tysdal', role: 'DevOps', email: '-' },
-]);
+const members = ref<Member[]>(membersData);
 </script>
 
 <template>

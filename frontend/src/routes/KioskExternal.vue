@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useQuery } from "@tanstack/vue-query";
 import { apiClient } from "@/api/client";
@@ -90,21 +90,25 @@ const slides = computed<HeroSlide[]>(() => {
 const slideIndex = ref(0);
 const currentSlide = computed(() => slides.value[slideIndex.value] ?? null);
 
-watchEffect(() => {
-  if (slideIndex.value >= slides.value.length) slideIndex.value = 0;
-});
-
-// Rotate the hero banner; nothing to cycle when there is only one slide
+// Rotate the hero banner; nothing to cycle when there is only one slide.
+// Key off the slide *count*, not the slides computed itself — it recomputes
+// every second (live countdown), which would restart the interval forever.
+const slideCount = computed(() => slides.value.length);
 let slideTimer: ReturnType<typeof setInterval> | null = null;
-watchEffect(() => {
-  if (slideTimer) clearInterval(slideTimer);
-  if (slides.value.length > 1) {
-    slideTimer = setInterval(
-      () => (slideIndex.value = (slideIndex.value + 1) % slides.value.length),
-      SLIDE_INTERVAL_MS,
-    );
-  }
-});
+watch(
+  slideCount,
+  (count) => {
+    if (slideTimer) clearInterval(slideTimer);
+    slideIndex.value = 0;
+    if (count > 1) {
+      slideTimer = setInterval(
+        () => (slideIndex.value = (slideIndex.value + 1) % count),
+        SLIDE_INTERVAL_MS,
+      );
+    }
+  },
+  { immediate: true },
+);
 
 const events = computed<EventItem[]>(() =>
   (eventsData.value?.items ?? []).slice(0, MAX_EVENT_CARDS),

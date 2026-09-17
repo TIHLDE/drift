@@ -1,0 +1,91 @@
+[
+  {
+    "id": "1",
+    "name": "Sofie Sirevåg Tysdal",
+    "role": "Driftsminister - Docker/GitHub",
+    "email": "-"
+  },
+  {
+    "id": "2",
+    "name": "Sigve Eriksen",
+    "role": "Nestleder - Docker/GitHub",
+    "email": "sigveer@tihlde.org"
+  },
+  {
+    "id": "3",
+    "name": "Alexander Owren Elton",
+    "role": "DNS",
+    "email": "-"
+  },
+  {
+    "id": "4",
+    "name": "Kristian Ask Selmer",
+    "role": "Monitorering",
+    "email": "-"
+  },
+  {
+    "id": "5",
+    "name": "Stian Closs Walmann",
+    "role": "",
+    "email": ""
+  },
+  {
+    "id": "6",
+    "name": "Martin Godø",
+    "role": "Database",
+    "email": "-"
+  },
+  {
+    "id": "7",
+    "name": "Sander Bratvold",
+    "role": "Botsjef / Monitorering",
+    "email": "sander.bratvold@tihlde.org"
+  },
+  {
+    "id": "8",
+    "name": "Sindre Jentoft Bøe",
+    "role": "-",
+    "email": "-"
+  },
+  {
+    "id": "",
+    "name": "",
+    "role": "",
+    "email": ""
+  }
+  ,
+  {
+    "id": "",
+    "name": "",
+    "role": "",
+    "email": ""
+  }
+  ,
+  {
+    "id": "",
+    "name": "",
+    "role": "",
+    "email": ""
+  }
+  ,
+  {
+    "id": "",
+    "name": "",
+    "role": "",
+    "email": ""
+  }
+  ,
+  {
+    "id": "",
+    "name": "",
+    "role": "",
+    "email": ""
+  }
+  ,
+  {
+    "id": "",
+    "name": "",
+    "role": "",
+    "email": ""
+  }
+]

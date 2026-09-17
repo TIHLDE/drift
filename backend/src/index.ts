@@ -41,6 +41,7 @@ const app = new Hono<{
     return c.text("Internal Server Error", { status: 500 });
   })
   .basePath("/api")
+  .get("/health", (c) => c.json({ status: "ok", timestamp: new Date().toISOString() }))
   .route("/", zettleApp)
   .route("/", minecraftApp)
   .route("/", photonApp);

@@ -9,6 +9,8 @@ import {
   endOfMonth,
   getMonth,
   getYear,
+  differenceInCalendarMonths,
+  isAfter,
 } from "date-fns";
 import { ZettleAPI } from "./service";
 import z from "zod";
@@ -38,6 +40,10 @@ const PurchaseParamsSchema = z.object({
   startDate: z.iso.datetime().optional().nullable(),
   endDate: z.iso.datetime().optional().nullable(),
 });
+
+// Each month in the range is a separate Zettle API call, so cap how many a
+// single request can trigger.
+const MAX_RANGE_MONTHS = 24;
 
 async function GetAllPurchasesInRange(
   zettleApi: ZettleAPI,
@@ -99,6 +105,16 @@ const zettleApp = createRoute()
       params.startDate ? params.startDate : subWeeks(new Date(), 1),
     );
     const endDate = endOfDay(params.endDate ? params.endDate : new Date());
+
+    if (isAfter(startDate, endDate)) {
+      return c.json({ error: "startDate must be before endDate" }, 400);
+    }
+    if (differenceInCalendarMonths(endDate, startDate) > MAX_RANGE_MONTHS) {
+      return c.json(
+        { error: `Date range cannot exceed ${MAX_RANGE_MONTHS} months` },
+        400,
+      );
+    }
 
     const allPurchases = await GetAllPurchasesInRange(
       zettleApi,

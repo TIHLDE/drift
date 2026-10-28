@@ -14,7 +14,7 @@
   {
     "id": "3",
     "name": "Alexander Owren Elton",
-    "role": "DNS",
+    "role": "NGINX/DNS",
     "email": "-"
   },
   {
@@ -26,8 +26,8 @@
   {
     "id": "5",
     "name": "Stian Closs Walmann",
-    "role": "",
-    "email": ""
+    "role": "Docker/GitHub",
+    "email": "-"
   },
   {
     "id": "6",
@@ -44,48 +44,60 @@
   {
     "id": "8",
     "name": "Sindre Jentoft Bøe",
-    "role": "-",
+    "role": "NGINX/DNS",
     "email": "-"
   },
   {
-    "id": "",
-    "name": "",
-    "role": "",
-    "email": ""
+    "id": "9",
+    "name": "Adele Christine Thorberg",
+    "role": "NGINX/DNS",
+    "email": "-"
   }
   ,
   {
-    "id": "",
-    "name": "",
-    "role": "",
-    "email": ""
+    "id": "10",
+    "name": "Vladyslava Fienka",
+    "role": "NGINX/DNS",
+    "email": "-"
   }
   ,
   {
-    "id": "",
-    "name": "",
-    "role": "",
-    "email": ""
+    "id": "11",
+    "name": "Phillip Dyb-Sandnes",
+    "role": "Monitorering",
+    "email": "-"
   }
   ,
   {
-    "id": "",
-    "name": "",
-    "role": "",
-    "email": ""
+    "id": "12",
+    "name": "Jonathan Schirdewahn",
+    "role": "Docker/GitHub",
+    "email": "-"
   }
   ,
   {
-    "id": "",
-    "name": "",
-    "role": "",
-    "email": ""
+    "id": "13",
+    "name": "Then Cederstrøm Hjertuslot",
+    "role": "Docker/GitHub",
+    "email": "-"
   }
   ,
   {
-    "id": "",
-    "name": "",
-    "role": "",
-    "email": ""
+    "id": "14",
+    "name": "Clemens Beese",
+    "role": "Docker/GitHub",
+    "email": "-"
+  },
+  {
+    "id": "15",
+    "name": "Albert Paulsen Lindberg",
+    "role": "Database",
+    "email": "-"
+  },
+  {
+    "id": "16",
+    "name": "Aleksander Krogsvold Johansen",
+    "role": "Monitorering",
+    "email": "-"
   }
 ]

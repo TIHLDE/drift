@@ -87,7 +87,13 @@ const productsQuery = computed(() => {
             endDate: nowISOString.value,
           },
         })
-        .then((res) => res.json());
+        .then(async (res) => {
+          const body = await res.json();
+          if (!Array.isArray(body)) {
+            throw new Error(body.error);
+          }
+          return body;
+        });
     },
   });
 });
